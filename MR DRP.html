@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrownTab Live Pageant Scoring & Tabulation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0d1117; color: #f0f6fc; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .gold-gradient { background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gold-btn { background: linear-gradient(135deg, #c5a059 0%, #99752b 100%); color: #fff; transition: all 0.3s ease; }
+        .gold-btn:hover { background: linear-gradient(135deg, #d4af37 0%, #b38728 100%); box-shadow: 0 0 15px rgba(197, 160, 89, 0.5); }
+        .glass-panel { background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(197, 160, 89, 0.2); }
+        .tab-active { border-bottom: 3px solid #c5a059; color: #fcf6ba; font-weight: 600; }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(197, 160, 89, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(197, 160, 89, 0.8); }
+        }
+        .glow-box { animation: pulse-glow 3s infinite; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Header & Announcement Marquee -->
+    <header class="glass-panel sticky top-0 z-50 border-b border-yellow-600/30">
+        <div id="announcement-banner" class="bg-gradient-to-r from-yellow-700 via-yellow-600 to-amber-700 text-black px-4 py-2 font-bold text-center text-sm md:text-base flex items-center justify-center space-x-3 shadow-lg">
+            <i class="fas fa-crown animate-bounce"></i>
+            <span id="banner-text">👑 WELCOME TO CROWNTAB LIVE TABULATION — PRELIMINARY & FINALS ROUNDS IN PROGRESS!</span>
+            <span onclick="dismissAnnouncement()" class="cursor-pointer text-xs bg-black/20 hover:bg-black/40 px-2 py-0.5 rounded text-white ml-4">✕</span>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-3 mb-2 md:mb-0">
+                <div class="p-2 rounded-xl bg-yellow-600/20 border border-yellow-500/40">
+                    <i class="fas fa-crown text-2xl gold-gradient"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-cinzel font-bold gold-gradient tracking-wide">CrownTab Live</h1>
+                    <p class="text-xs text-gray-400">Official Pageant Tabulation & Scoring System</p>
+                </div>
+            </div>
+            <!-- Navigation Tabs -->
+            <nav class="flex space-x-1 md:space-x-3 overflow-x-auto py-1 text-sm">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-active px-3 py-2 transition hover:text-yellow-300 whitespace-nowrap"><i class="fas fa-chart-line mr-1.5"></i> Prelims Dashboard</button>
+                <button onclick="switchTab('finals')" id="btn-finals" class="px-3 py-2 text-gray-400 transition hover:text-yellow-300 whitespace-nowrap"><i class="fas fa-star mr-1.5"></i> Top 5 Finals Q&A</button>
+                <button onclick="switchTab('judges')" id="btn-judges" class="px-3 py-2 text-gray-400 transition hover:text-yellow-300 whitespace-nowrap"><i class="fas fa-gavel mr-1.5"></i> Judges Portal</button>
+                <button onclick="switchTab('candidates')" id="btn-candidates" class="px-3 py-2 text-gray-400 transition hover:text-yellow-300 whitespace-nowrap"><i class="fas fa-users mr-1.5"></i> Candidates (8)</button>
+                <button onclick="switchTab('display')" id="btn-display" class="px-3 py-2 text-gray-400 transition hover:text-yellow-300 whitespace-nowrap"><i class="fas fa-tv mr-1.5"></i> Stage TV Mode</button>
+                <button onclick="switchTab('admin')" id="btn-admin" class="px-3 py-2 text-gray-400 transition hover:text-yellow-300 whitespace-nowrap"><i class="fas fa-sliders-h mr-1.5"></i> Admin</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+
+        <!-- TAB 1: PRELIMS TABULATION DASHBOARD -->
+        <div id="tab-dashboard" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass-panel p-5 rounded-xl border-l-4 border-yellow-500">
+                    <p class="text-xs text-gray-400 font-semibold uppercase">Total Candidates</p>
+                    <h3 id="stat-candidates" class="text-3xl font-bold font-cinzel mt-1 gold-gradient">8</h3>
+                </div>
+                <div class="glass-panel p-5 rounded-xl border-l-4 border-amber-500">
+                    <p class="text-xs text-gray-400 font-semibold uppercase">Active Judges</p>
+                    <h3 class="text-3xl font-bold font-cinzel mt-1 gold-gradient">3 / 3</h3>
+                    <p class="text-xs text-gray-400 mt-1">Emilie, Obri, Shang</p>
+                </div>
+                <div class="glass-panel p-5 rounded-xl border-l-4 border-yellow-600">
+                    <p class="text-xs text-gray-400 font-semibold uppercase">Prelims Rounds</p>
+                    <h3 class="text-3xl font-bold font-cinzel mt-1 gold-gradient">5 Segments</h3>
+                    <p class="text-xs text-gray-400 mt-1">Intro, Costume, Swimsuit, Formal, Q&A</p>
+                </div>
+                <div class="glass-panel p-5 rounded-xl border-l-4 border-yellow-400 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs text-gray-400 font-semibold uppercase">Quick Export</p>
+                        <p class="text-xs text-gray-300 mt-1">Download tabulated results</p>
+                    </div>
+                    <button onclick="exportCSV()" class="mt-2 px-3 py-1.5 text-xs font-bold gold-btn rounded shadow flex items-center justify-center">
+                        <i class="fas fa-file-csv mr-1.5"></i> Export CSV Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Top 3 Podium Highlights -->
+            <div class="glass-panel p-6 rounded-2xl glow-box border border-yellow-500/40">
+                <h2 class="text-xl font-cinzel font-bold text-center mb-6 gold-gradient"><i class="fas fa-trophy mr-2 text-yellow-400"></i>Current Prelims Leaderboard (Top 3 Podium)</h2>
+                <div id="podium-container" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            </div>
+
+            <!-- Full Leaderboard Table -->
+            <div class="glass-panel rounded-2xl overflow-hidden border border-yellow-600/30">
+                <div class="p-4 bg-gray-900/60 border-b border-yellow-600/30 flex justify-between items-center">
+                    <h3 class="font-cinzel font-bold text-lg gold-gradient"><i class="fas fa-list-ol mr-2"></i>Official Prelims Tabulation Table</h3>
+                    <div class="flex space-x-2">
+                        <input type="text" id="search-candidate" onkeyup="filterLeaderboard()" placeholder="Search candidate..." class="bg-gray-800 border border-gray-700 text-sm rounded px-3 py-1.5 text-white focus:outline-none focus:border-yellow-500">
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-900 text-yellow-400 uppercase text-xs tracking-wider border-b border-yellow-600/30">
+                                <th class="p-3.5 text-center">Rank</th>
+                                <th class="p-3.5 text-center">No.</th>
+                                <th class="p-3.5">Candidate Name</th>
+                                <th class="p-3.5 text-center">Introduction (15%)</th>
+                                <th class="p-3.5 text-center">Costume (15%)</th>
+                                <th class="p-3.5 text-center">Swinsuit (20%)</th>
+                                <th class="p-3.5 text-center">Formal Attire (25%)</th>
+                                <th class="p-3.5 text-center">Q and A (25%)</th>
+                                <th class="p-3.5 text-center font-bold text-yellow-300">Total (100)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-tbody" class="divide-y divide-gray-800 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: TOP 5 FINALS Q&A PANEL -->
+        <div id="tab-finals" class="hidden space-y-6">
+            <div class="glass-panel p-6 rounded-2xl space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-4 border-b border-gray-800">
+                    <div>
+                        <h2 class="text-2xl font-cinzel font-bold gold-gradient"><i class="fas fa-star mr-2"></i>Top 5 Finals Tabulation & Scoring</h2>
+                        <p class="text-sm text-gray-400 mt-1">Final round for Top 5 qualifiers. Scored strictly on <span class="text-yellow-400 font-semibold">Fit (50%)</span> and <span class="text-yellow-400 font-semibold">Final Q & A (50%)</span>.</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 flex space-x-3">
+                        <button onclick="autoSelectTop5()" class="px-4 py-2 bg-yellow-600/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-600/30 text-xs font-bold rounded-lg transition">
+                            <i class="fas fa-magic mr-1"></i> Auto-Load Top 5 from Prelims
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900/70 p-4 rounded-xl border border-gray-800 flex flex-col md:flex-row justify-between items-center">
+                    <div>
+                        <h4 class="font-bold text-base text-yellow-400">Finalist Judges Scoring (Fit 50% + Final Q&A 50%)</h4>
+                        <p class="text-xs text-gray-400">Select active judge and input scores for the 5 finalists.</p>
+                    </div>
+                    <div class="mt-3 md:mt-0 flex items-center space-x-3">
+                        <label class="text-sm font-semibold text-yellow-400">Judge:</label>
+                        <select id="final-judge-select" onchange="renderFinalsScoring()" class="bg-gray-900 border border-yellow-500/50 rounded-lg px-3 py-1.5 text-white text-sm font-medium focus:outline-none">
+                            <option value="Emilie Solis Bonita">Emilie Solis Bonita</option>
+                            <option value="Obri Sinclair Stark">Obri Sinclair Stark</option>
+                            <option value="Shang Forteza">Shang Forteza</option>
+                        </select>
+                        <button onclick="saveFinalScores()" class="px-4 py-1.5 gold-btn font-bold rounded-lg text-xs shadow">Save Final Scores</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-900 text-gray-400 uppercase text-xs tracking-wider border-b border-gray-800">
+                                <th class="p-3 text-center w-20">No.</th>
+                                <th class="p-3">Finalist Name</th>
+                                <th class="p-3 text-center">Fit (50%)</th>
+                                <th class="p-3 text-center">Final Q & A (50%)</th>
+                                <th class="p-3 text-right pr-6">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finals-input-tbody" class="divide-y divide-gray-800 text-sm"></tbody>
+                    </table>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-yellow-600/30">
+                    <h3 class="text-xl font-cinzel font-bold text-center mb-6 gold-gradient"><i class="fas fa-crown mr-2 text-yellow-400"></i>Official Final Crown & Winner Standings</h3>
+                    <div id="finals-podium" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: JUDGES PORTAL -->
+        <div id="tab-judges" class="hidden space-y-6">
+            <div class="glass-panel p-6 rounded-2xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-gray-800">
+                    <div>
+                        <h2 class="text-2xl font-cinzel font-bold gold-gradient"><i class="fas fa-gavel mr-2"></i>Prelims Judges Scoring Portal</h2>
+                        <p class="text-sm text-gray-400 mt-1">Select your judge profile, segment, and score candidates (50 to 100).</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 flex items-center space-x-3">
+                        <label class="text-sm font-semibold text-yellow-400">Select Judge:</label>
+                        <select id="active-judge-select" onchange="renderJudgeScoring()" class="bg-gray-900 border border-yellow-500/55 rounded-lg px-4 py-2 text-white font-medium focus:outline-none">
+                            <option value="Emilie Solis Bonita">Emilie Solis Bonita</option>
+                            <option value="Obri Sinclair Stark">Obri Sinclair Stark</option>
+                            <option value="Shang Forteza">Shang Forteza</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="text-sm font-semibold text-gray-300 block mb-2">Select Competition Segment:</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="segment-buttons">
+                        <button onclick="setActiveSegment('Introduction', 15)" id="seg-btn-Introduction" class="p-3 rounded-xl border border-yellow-500/50 bg-yellow-500/20 text-yellow-300 font-semibold text-sm transition flex flex-col items-center">
+                            <span>Introduction</span><span class="text-xs text-gray-300 font-normal mt-1">Weight: 15%</span>
+                        </button>
+                        <button onclick="setActiveSegment('Costume', 15)" id="seg-btn-Costume" class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-gray-300 font-semibold text-sm transition flex flex-col items-center">
+                            <span>Costume</span><span class="text-xs text-gray-400 font-normal mt-1">Weight: 15%</span>
+                        </button>
+                        <button onclick="setActiveSegment('Swinsuit', 20)" id="seg-btn-Swinsuit" class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-gray-300 font-semibold text-sm transition flex flex-col items-center">
+                            <span>Swinsuit</span><span class="text-xs text-gray-400 font-normal mt-1">Weight: 20%</span>
+                        </button>
+                        <button onclick="setActiveSegment('Formal Attire', 25)" id="seg-btn-Formal Attire" class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-gray-300 font-semibold text-sm transition flex flex-col items-center">
+                            <span>Formal Attire</span><span class="text-xs text-gray-400 font-normal mt-1">Weight: 25%</span>
+                        </button>
+                        <button onclick="setActiveSegment('Q and A', 25)" id="seg-btn-Q and A" class="p-3 rounded-xl border border-gray-700 bg-gray-900 text-gray-300 font-semibold text-sm transition flex flex-col items-center">
+                            <span>Q and A</span><span class="text-xs text-gray-400 font-normal mt-1">Weight: 25%</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900/70 p-4 rounded-xl border border-gray-800 mb-6 flex justify-between items-center">
+                    <div>
+                        <h4 id="scoring-header-title" class="font-bold text-base text-yellow-400">Scoring: Introduction (15% Weight)</h4>
+                        <p class="text-xs text-gray-400">Enter scores from 50.00 to 100.00 for each candidate.</p>
+                    </div>
+                    <button onclick="saveJudgeScores()" class="px-5 py-2 gold-btn font-bold rounded-lg text-sm shadow flex items-center">
+                        <i class="fas fa-save mr-2"></i> Save Scores
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-900 text-gray-400 uppercase text-xs tracking-wider border-b border-gray-800">
+                                <th class="p-3 text-center w-20">No.</th>
+                                <th class="p-3">Candidate Name</th>
+                                <th class="p-3 w-48 text-center">Score (50 - 100)</th>
+                                <th class="p-3 text-right pr-6">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="judge-scoring-tbody" class="divide-y divide-gray-800 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: CANDIDATES LIST -->
+        <div id="tab-candidates" class="hidden space-y-6">
+            <div class="glass-panel p-6 rounded-2xl">
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
+                    <div>
+                        <h2 class="text-2xl font-cinzel font-bold gold-gradient"><i class="fas fa-users mr-2"></i>Official 8 Candidates Roster</h2>
+                        <p class="text-sm text-gray-400 mt-1">Manage pageant contestants and registered participants.</p>
+                    </div>
+                    <button onclick="openAddCandidateModal()" class="px-4 py-2 gold-btn rounded-lg text-sm font-bold shadow flex items-center">
+                        <i class="fas fa-user-plus mr-2"></i> Add Candidate
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="candidates-grid"></div>
+            </div>
+        </div>
+
+        <!-- TAB 5: STAGE TV MODE -->
+        <div id="tab-display" class="hidden space-y-6">
+            <div class="glass-panel p-8 rounded-3xl border-2 border-yellow-500/50 text-center relative overflow-hidden glow-box">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-500 via-amber-300 to-yellow-600"></div>
+                <h2 class="text-xs uppercase tracking-widest text-yellow-400 font-bold mb-1">Live Stage Presentation Mode</h2>
+                <h1 class="text-4xl md:text-5xl font-cinzel font-black gold-gradient mb-6">👑 OFFICIAL LEADERBOARD 👑</h1>
+                <div id="stage-spotlight" class="space-y-4 max-w-4xl mx-auto"></div>
+            </div>
+        </div>
+
+        <!-- TAB 6: ADMIN -->
+        <div id="tab-admin" class="hidden space-y-6">
+            <div class="glass-panel p-6 rounded-2xl space-y-6">
+                <div>
+                    <h2 class="text-2xl font-cinzel font-bold gold-gradient"><i class="fas fa-sliders-h mr-2"></i>Admin & Broadcast Control Center</h2>
+                    <p class="text-sm text-gray-400 mt-1">Broadcast custom announcements or reset data.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-900/60 p-5 rounded-xl border border-gray-800 space-y-4">
+                        <h3 class="font-bold text-base text-yellow-400 flex items-center"><i class="fas fa-bullhorn mr-2"></i> Broadcast Announcement</h3>
+                        <textarea id="custom-announcement-input" rows="3" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none" placeholder="e.g. TOP 5 FINALISTS HAVE BEEN ANNOUNCED!"></textarea>
+                        <button onclick="broadcastAnnouncement()" class="w-full py-2.5 gold-btn font-bold rounded-lg text-sm shadow">Broadcast Live</button>
+                    </div>
+                    <div class="bg-gray-900/60 p-5 rounded-xl border border-gray-800 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-base text-red-400 flex items-center"><i class="fas fa-exclamation-triangle mr-2"></i> System Data Management</h3>
+                            <p class="text-xs text-gray-400 mt-2">Load sample scores for 8 candidates or reset all data.</p>
+                        </div>
+                        <div class="space-y-2">
+                            <button onclick="loadMockScores()" class="w-full py-2.5 bg-yellow-600/20 border border-yellow-500/40 text-yellow-300 font-bold rounded-lg text-sm transition">Load Sample Scores (8 Candidates)</button>
+                            <button onclick="resetAllScores()" class="w-full py-2.5 bg-red-600/20 border border-red-500/40 text-red-300 font-bold rounded-lg text-sm transition">Reset All Scores</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Add Candidate Modal -->
+    <div id="candidate-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel p-6 rounded-2xl max-w-md w-full border border-yellow-500/50 space-y-4">
+            <h3 class="text-xl font-cinzel font-bold gold-gradient">Add New Candidate</h3>
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">Candidate Number:</label>
+                <input type="number" id="new-cand-no" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:outline-none" placeholder="e.g. 9">
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">Candidate Full Name:</label>
+                <input type="text" id="new-cand-name" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:outline-none" placeholder="e.g. Samantha Vance">
+            </div>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeAddCandidateModal()" class="flex-1 py-2 bg-gray-800 text-gray-300 font-bold rounded-lg text-sm">Cancel</button>
+                <button onclick="saveNewCandidate()" class="flex-1 py-2 gold-btn font-bold rounded-lg text-sm shadow">Add Candidate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-panel border-t border-yellow-600/30 py-4 text-center text-xs text-gray-400 mt-auto">
+        <p>👑 CrownTab Live Pageant Tabulation System — Judges: Emilie Solis Bonita, Obri Sinclair Stark, Shang Forteza</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        const judges = ["Emilie Solis Bonita", "Obri Sinclair Stark", "Shang Forteza"];
+        const segments = [
+            { name: "Introduction", weight: 0.15 },
+            { name: "Costume", weight: 0.15 },
+            { name: "Swinsuit", weight: 0.20 },
+            { name: "Formal Attire", weight: 0.25 },
+            { name: "Q and A", weight: 0.25 }
+        ];
+
+        let candidates = [
+            { number: 1, name: "Peanut A. Castillo" },
+            { number: 2, name: "Kairo G. Ramirez" },
+            { number: 3, name: "Osh Tan" },
+            { number: 4, name: "Rawrbie Miki" },
+            { number: 5, name: "Quatro C. Anderson" },
+            { number: 6, name: "Koshi Y. Mizushima" },
+            { number: 7, name: "Rhain Alvarez" },
+            { number: 8, name: "Cloud P. Arellano" }
+        ];
+
+        let scores = {};
+        let finalScores = {};
+        let top5Candidates = [];
+
+        function initScores() {
+            judges.forEach(j => {
+                scores[j] = {};
+                segments.forEach(s => {
+                    scores[j][s.name] = {};
+                    candidates.forEach(c => { scores[j][s.name][c.number] = 0; });
+                });
+                finalScores[j] = {};
+                candidates.forEach(c => { finalScores[j][c.number] = { fit: 0, qa: 0 }; });
+            });
+        }
+        initScores();
+
+        let activeSegment = "Introduction";
+
+        function switchTab(tabId) {
+            ['dashboard', 'finals', 'judges', 'candidates', 'display', 'admin'].forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hidden');
+                document.getElementById('btn-' + t).classList.remove('tab-active', 'text-yellow-300');
+                document.getElementById('btn-' + t).classList.add('text-gray-400');
+            });
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.add('tab-active', 'text-yellow-300');
+            document.getElementById('btn-' + tabId).classList.remove('text-gray-400');
+
+            if(tabId === 'dashboard') renderDashboard();
+            if(tabId === 'finals') { autoSelectTop5(); renderFinalsScoring(); }
+            if(tabId === 'judges') renderJudgeScoring();
+            if(tabId === 'candidates') renderCandidatesGrid();
+            if(tabId === 'display') renderStageDisplay();
+        }
+
+        function setActiveSegment(segName, weight) {
+            activeSegment = segName;
+            segments.forEach(s => {
+                const btn = document.getElementById('seg-btn-' + s.name);
+                if(s.name === segName) {
+                    btn.className = "p-3 rounded-xl border border-yellow-500/50 bg-yellow-500/20 text-yellow-300 font-semibold text-sm transition flex flex-col items-center";
+                } else {
+                    btn.className = "p-3 rounded-xl border border-gray-700 bg-gray-900 text-gray-300 font-semibold text-sm transition flex flex-col items-center";
+                }
+            });
+            document.getElementById('scoring-header-title').innerText = `Scoring: ${segName} (${weight}% Weight)`;
+            renderJudgeScoring();
+        }
+
+        function renderJudgeScoring() {
+            const judgeName = document.getElementById('active-judge-select').value;
+            const tbody = document.getElementById('judge-scoring-tbody');
+            tbody.innerHTML = '';
+            candidates.forEach(c => {
+                const currentScore = scores[judgeName][activeSegment][c.number] || '';
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/40 transition";
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-bold text-yellow-400">#${c.number}</td>
+                    <td class="p-3 font-medium text-white">${c.name}</td>
+                    <td class="p-3 text-center">
+                        <input type="number" step="0.01" min="50" max="100" id="score_${c.number}" value="${currentScore}" 
+                            class="w-32 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-center text-white font-bold focus:outline-none focus:border-yellow-500">
+                    </td>
+                    <td class="p-3 text-right pr-6">
+                        <span id="status_${c.number}" class="text-xs text-gray-500">${currentScore ? '✓ Saved' : 'Pending'}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function saveJudgeScores() {
+            const judgeName = document.getElementById('active-judge-select').value;
+            candidates.forEach(c => {
+                const input = document.getElementById(`score_${c.number}`);
+                if(input) {
+                    let val = parseFloat(input.value) || 0;
+                    if(val > 100) val = 100;
+                    if(val < 0) val = 0;
+                    scores[judgeName][activeSegment][c.number] = val;
+                }
+            });
+            renderDashboard();
+            alert('Prelims scores saved successfully for ' + judgeName + '!');
+        }
+
+        function calculateStandings() {
+            let results = candidates.map(c => {
+                let totalScore = 0;
+                let segmentTotals = {};
+                segments.forEach(seg => {
+                    let segSum = 0;
+                    judges.forEach(j => { segSum += (scores[j][seg.name][c.number] || 0); });
+                    let avgSegScore = segSum / judges.length;
+                    segmentTotals[seg.name] = avgSegScore;
+                    totalScore += avgSegScore * seg.weight;
+                });
+                return { number: c.number, name: c.name, segmentTotals: segmentTotals, totalScore: totalScore };
+            });
+            results.sort((a, b) => b.totalScore - a.totalScore);
+            results.forEach((r, idx) => { r.rank = idx + 1; });
+            return results;
+        }
+
+        function renderDashboard() {
+            const standings = calculateStandings();
+            document.getElementById('stat-candidates').innerText = candidates.length;
+            const podiumContainer = document.getElementById('podium-container');
+            podiumContainer.innerHTML = '';
+            const top3 = standings.slice(0, 3);
+            const podiumColors = [
+                { border: 'border-yellow-400', bg: 'from-yellow-500/20 to-yellow-600/5', badge: '🥇 1st Place', text: 'text-yellow-300' },
+                { border: 'border-gray-300', bg: 'from-gray-400/20 to-gray-600/5', badge: '🥈 2nd Place', text: 'text-gray-200' },
+                { border: 'border-amber-600', bg: 'from-amber-700/20 to-amber-900/5', badge: '🥉 3rd Place', text: 'text-amber-400' }
+            ];
+
+            top3.forEach((cand, idx) => {
+                const conf = podiumColors[idx];
+                const card = document.createElement('div');
+                card.className = `glass-panel p-5 rounded-xl border ${conf.border} bg-gradient-to-b ${conf.bg} text-center flex flex-col justify-between`;
+                card.innerHTML = `
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-black/40 ${conf.text} border ${conf.border} mb-3">${conf.badge}</span>
+                        <h4 class="text-lg font-cinzel font-bold text-white">#${cand.number} ${cand.name}</h4>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800">
+                        <p class="text-xs text-gray-400">Total Score</p>
+                        <p class="text-2xl font-bold font-cinzel gold-gradient">${cand.totalScore.toFixed(2)}</p>
+                    </div>
+                `;
+                podiumContainer.appendChild(card);
+            });
+
+            const tbody = document.getElementById('leaderboard-tbody');
+            tbody.innerHTML = '';
+            standings.forEach(cand => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/40 transition border-b border-gray-800";
+                tr.innerHTML = `
+                    <td class="p-3.5 text-center font-bold text-yellow-400">${cand.rank === 1 ? '👑 1' : cand.rank}</td>
+                    <td class="p-3.5 text-center font-medium">#${cand.number}</td>
+                    <td class="p-3.5 font-bold text-white">${cand.name}</td>
+                    <td class="p-3.5 text-center">${cand.segmentTotals['Introduction'].toFixed(2)}</td>
+                    <td class="p-3.5 text-center">${cand.segmentTotals['Costume'].toFixed(2)}</td>
+                    <td class="p-3.5 text-center">${cand.segmentTotals['Swinsuit'].toFixed(2)}</td>
+                    <td class="p-3.5 text-center">${cand.segmentTotals['Formal Attire'].toFixed(2)}</td>
+                    <td class="p-3.5 text-center">${cand.segmentTotals['Q and A'].toFixed(2)}</td>
+                    <td class="p-3.5 text-center font-black text-yellow-300 text-base">${cand.totalScore.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function autoSelectTop5() {
+            const standings = calculateStandings();
+            top5Candidates = standings.slice(0, 5);
+            renderFinalsScoring();
+        }
+
+        function renderFinalsScoring() {
+            if(top5Candidates.length === 0) { autoSelectTop5(); return; }
+            const judgeName = document.getElementById('final-judge-select').value;
+            const tbody = document.getElementById('finals-input-tbody');
+            tbody.innerHTML = '';
+            top5Candidates.forEach(cand => {
+                const fData = finalScores[judgeName][cand.number] || { fit: 0, qa: 0 };
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/40 transition";
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-bold text-yellow-400">#${cand.number}</td>
+                    <td class="p-3 font-medium text-white">${cand.name}</td>
+                    <td class="p-3 text-center">
+                        <input type="number" step="0.01" min="50" max="100" id="final_fit_${cand.number}" value="${fData.fit || ''}" 
+                            class="w-32 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-center text-white font-bold focus:outline-none focus:border-yellow-500" placeholder="Fit (50%)">
+                    </td>
+                    <td class="p-3 text-center">
+                        <input type="number" step="0.01" min="50" max="100" id="final_qa_${cand.number}" value="${fData.qa || ''}" 
+                            class="w-32 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-center text-white font-bold focus:outline-none focus:border-yellow-500" placeholder="Q & A (50%)">
+                    </td>
+                    <td class="p-3 text-right pr-6">
+                        <span id="final_status_${cand.number}" class="text-xs text-gray-400">${fData.fit ? '✓ Saved' : 'Pending'}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            renderFinalsPodium();
+        }
+
+        function saveFinalScores() {
+            const judgeName = document.getElementById('final-judge-select').value;
+            top5Candidates.forEach(cand => {
+                const fitInput = document.getElementById(`final_fit_${cand.number}`);
+                const qaInput = document.getElementById(`final_qa_${cand.number}`);
+                if(fitInput && qaInput) {
+                    finalScores[judgeName][cand.number] = {
+                        fit: parseFloat(fitInput.value) || 0,
+                        qa: parseFloat(qaInput.value) || 0
+                    };
+                }
+            });
+            renderFinalsPodium();
+            alert('Final Top 5 scores saved successfully for ' + judgeName + '!');
+        }
+
+        function calculateFinalStandings() {
+            if(top5Candidates.length === 0) return [];
+            let results = top5Candidates.map(cand => {
+                let fitSum = 0, qaSum = 0;
+                judges.forEach(j => {
+                    fitSum += (finalScores[j][cand.number].fit || 0);
+                    qaSum += (finalScores[j][cand.number].qa || 0);
+                });
+                let avgFit = fitSum / judges.length;
+                let avgQa = qaSum / judges.length;
+                let finalTotal = (avgFit * 0.50) + (avgQa * 0.50);
+                return { number: cand.number, name: cand.name, avgFit: avgFit, avgQa: avgQa, finalTotal: finalTotal };
+            });
+            results.sort((a, b) => b.finalTotal - a.finalTotal);
+            results.forEach((r, idx) => { r.rank = idx + 1; });
+            return results;
+        }
+
+        function renderFinalsPodium() {
+            const finalStandings = calculateFinalStandings();
+            const podium = document.getElementById('finals-podium');
+            podium.innerHTML = '';
+            const crownConfig = [
+                { title: '👑 MISS UNIVERSE / GRAND WINNER', border: 'border-yellow-400', bg: 'from-yellow-500/25 to-yellow-600/10', text: 'text-yellow-300' },
+                { title: '🥈 1ST RUNNER UP', border: 'border-gray-300', bg: 'from-gray-400/20 to-gray-600/5', text: 'text-gray-200' },
+                { title: '🥉 2ND RUNNER UP', border: 'border-amber-600', bg: 'from-amber-700/20 to-amber-900/5', text: 'text-amber-400' }
+            ];
+
+            finalStandings.slice(0, 3).forEach((cand, idx) => {
+                const conf = crownConfig[idx];
+                const card = document.createElement('div');
+                card.className = `glass-panel p-5 rounded-2xl border ${conf.border} bg-gradient-to-b ${conf.bg} text-center flex flex-col justify-between`;
+                card.innerHTML = `
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-black/50 ${conf.text} border ${conf.border} mb-3">${conf.title}</span>
+                        <h4 class="text-xl font-cinzel font-bold text-white">#${cand.number} ${cand.name}</h4>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800 space-y-1">
+                        <p class="text-xs text-gray-400">Fit (50%): ${cand.avgFit.toFixed(2)} | Q&A (50%): ${cand.avgQa.toFixed(2)}</p>
+                        <p class="text-2xl font-bold font-cinzel gold-gradient">Final Score: ${cand.finalTotal.toFixed(2)}</p>
+                    </div>
+                `;
+                podium.appendChild(card);
+            });
+        }
+
+        function renderCandidatesGrid() {
+            const grid = document.getElementById('candidates-grid');
+            grid.innerHTML = '';
+            candidates.forEach(c => {
+                const card = document.createElement('div');
+                card.className = "glass-panel p-4 rounded-xl border border-yellow-500/30 flex flex-col items-center text-center space-y-2";
+                card.innerHTML = `
+                    <div class="w-16 h-16 rounded-full bg-yellow-600/20 border border-yellow-500/50 flex items-center justify-center font-cinzel font-bold text-xl gold-gradient">
+                        #${c.number}
+                    </div>
+                    <h4 class="font-bold text-white text-base">${c.name}</h4>
+                    <span class="text-xs px-2 py-0.5 bg-yellow-500/10 text-yellow-300 rounded-full border border-yellow-500/30">Official Contestant</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openAddCandidateModal() { document.getElementById('candidate-modal').classList.remove('hidden'); }
+        function closeAddCandidateModal() { document.getElementById('candidate-modal').classList.add('hidden'); }
+        function saveNewCandidate() {
+            const num = parseInt(document.getElementById('new-cand-no').value);
+            const name = document.getElementById('new-cand-name').value;
+            if(!num || !name) { alert('Please provide number and name.'); return; }
+            candidates.push({ number: num, name: name });
+            initScores();
+            closeAddCandidateModal();
+            renderCandidatesGrid();
+            renderDashboard();
+            document.getElementById('new-cand-no').value = '';
+            document.getElementById('new-cand-name').value = '';
+        }
+
+        function renderStageDisplay() {
+            const standings = calculateStandings();
+            const spotlight = document.getElementById('stage-spotlight');
+            spotlight.innerHTML = '';
+            if(standings.length > 0) {
+                const leader = standings[0];
+                spotlight.innerHTML = `
+                    <div class="p-6 rounded-2xl bg-gradient-to-r from-yellow-600/30 via-amber-500/20 to-yellow-600/30 border border-yellow-400 text-center space-y-3">
+                        <span class="px-4 py-1 rounded-full bg-yellow-500 text-black font-bold text-sm">👑 CURRENT PRELIMS LEADER 👑</span>
+                        <h3 class="text-4xl font-cinzel font-black text-white">#${leader.number} — ${leader.name}</h3>
+                        <p class="text-3xl font-cinzel font-bold gold-gradient">Score: ${leader.totalScore.toFixed(2)}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function broadcastAnnouncement() {
+            const text = document.getElementById('custom-announcement-input').value;
+            if(!text) { alert('Please enter text.'); return; }
+            document.getElementById('banner-text').innerText = text;
+            alert('Announcement broadcasted successfully!');
+        }
+        function dismissAnnouncement() { document.getElementById('announcement-banner').style.display = 'none'; }
+
+        function loadMockScores() {
+            judges.forEach(j => {
+                segments.forEach(s => {
+                    candidates.forEach(c => { scores[j][s.name][c.number] = parseFloat((85 + Math.random() * 14).toFixed(2)); });
+                });
+                candidates.forEach(c => {
+                    finalScores[j][c.number] = {
+                        fit: parseFloat((88 + Math.random() * 11).toFixed(2)),
+                        qa: parseFloat((88 + Math.random() * 11).toFixed(2))
+                    };
+                });
+            });
+            renderDashboard();
+            autoSelectTop5();
+            alert('Sample test scores loaded for all 8 candidates!');
+        }
+
+        function resetAllScores() {
+            if(confirm('Reset all scores?')) {
+                initScores();
+                renderDashboard();
+                alert('Reset complete.');
+            }
+        }
+
+        function exportCSV() {
+            const standings = calculateStandings();
+            let csv = 'Rank,Candidate No,Candidate Name,Introduction,Costume,Swinsuit,Formal Attire,Q and A,Total Score\n';
+            standings.forEach(s => {
+                csv += `${s.rank},${s.number},"${s.name}",${s.segmentTotals['Introduction'].toFixed(2)},${s.segmentTotals['Costume'].toFixed(2)},${s.segmentTotals['Swinsuit'].toFixed(2)},${s.segmentTotals['Formal Attire'].toFixed(2)},${s.segmentTotals['Q and A'].toFixed(2)},${s.totalScore.toFixed(2)}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'pageant_report.csv');
+            a.click();
+        }
+
+        renderDashboard();
+    </script>
+</body>
+</html>
